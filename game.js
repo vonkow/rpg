@@ -169,12 +169,12 @@ var startGame=function() {
 	.using('hero/rangerF','png',['u0','u1','u2','d0','d1','d2','l0','l1','l2','r0','r1','r2'])
 	.newRule('combat',new combat())
 	.newEnt(new combatStat()).base.display(' ',0,0,0).end()
-	/*.newMap('map','map01','png',320,320).display().end()
+	.newMap('map','map01','png',320,320).display().end()
 	.newEnt(new hero()).base.display('d1',0,0,0).end()
 	.newEnt(new wall(64,64)).base.display('',16,192,0).end()
 	.newEnt(new wall(64,48)).base.display('',144,16,0).end()
 	.newEnt(new wall(16,16)).base.display('',144,64,0).end()
 	.newEnt(new wall(32,32)).base.display('',208,16,0).end()
-	.newEnt(new wall(16,16)).base.display('',208,48,0).end()*/
+	.newEnt(new wall(16,16)).base.display('',208,48,0).end()
 	.start();
 };
