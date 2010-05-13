@@ -10,15 +10,19 @@ var hStat=function() {
 	this,turnEnd=false;
 	this.turn=function() {
 		if (rw.key('z')) {
-			attack(rw.rules['combat'].ppl[0],rw.rules['combat'].ppl[1]);
+			attack(this,rw.rules['combat'].ppl[1]);
 			this.turnEnd=true;
 		};
 	};
 };
 
+var party = {
+	lead:new hStat()
+};
+
 var vStat=function() {
 	this.side=1;
-	this.hp=15;
+	this.hp=35;
 	this.att=50;
 	this.dam=5;
 	this.def=0;
@@ -32,7 +36,7 @@ var vStat=function() {
 			this.ticker--;
 		} else {
 			this.ticker=40;
-			attack(rw.rules['combat'].ppl[1],rw.rules['combat'].ppl[0]);
+			attack(this,rw.rules['combat'].ppl[0]);
 			this.turnEnd=true;
 		};
 	};
@@ -48,7 +52,7 @@ var attack=function(a,t) {
 
 var combat=function() {
 	this.base=new rw.rule(true);
-	this.ppl=[new hStat(),new vStat()];
+	this.ppl=[party.lead,new vStat()];
 	this.isUp=[];
 	this.pause=false;
 	this.rule=function() {
@@ -81,8 +85,33 @@ var combat=function() {
 			} else {
 				this.pause=false;
 			}
+			var side0=false,side1=false;
+			for(var x=0;x<this.ppl.length;x++) {
+				var psn=this.ppl[x];
+				if (psn.alive) {
+					if(psn.side==0) {
+						side0=true;
+					} else {
+						side1=true;
+					};
+				};
+			};
+			if (side0==false) rw.atEnd(gameOver);
+			if (side1==false) rw.atEnd(loadMain); // Change this to load get loot screen
 		}
 	}
+};
+
+var combatHero=function(name,heroClass,gender) {
+	this.base=rw.ent(name+'_combat','combat/hero',heroClass+gender,'png',32,36);
+	this.update=function() {
+	};
+};
+
+var selectArrow=function() {
+	this.base=rw.ent('selectArrow','',' ',320,320);
+	this.update=function() {
+	};
 };
 
 var combatStat=function() {
@@ -97,6 +126,27 @@ var combatStat=function() {
 	};
 };
 
+var combatBox=function() {
+	this.base=rw.ent('combatBox','menu','combatbox','png',320,128);
+	this.update=function() {};
+};
+
+var heroBox=function(who) {
+	this.base=rw.ent(who+'_heroBox','menu','herobox','png',288,32);
+	this.update=function() {};
+};
+
+var loadFight=function() {
+	rw.saveState('main').wipeAll()
+	.newRule('combat', new combat())
+	.newEnt(new combatBox()).base.display('combatbox',0,192,192).end()
+	.newEnt(new heroBox('lead')).base.display('herobox',16,208).end()
+	.newEnt(new combatHero('lead','ranger','M')).base.display('rangerM',16,46,46).end()
+	.newEnt(new combatStat()).base.display(' ',0,0,0).end();
+};
+
+
+// OVERWORLD STUFF
 var wallCount=0;
 var wall=function(x,y) {
 	this.base=rw.ent('wall'+wallCount++,'','','',x,y);
@@ -155,26 +205,47 @@ var hero=function() {
 		};
 		this.base.changeSprite(this.dir+this.ani);
 	};
-	this.hitMap=[['hero',['wall'],0,2,16,18]];
+	this.hitMap=[['hero',['wall','villan'],0,2,16,18]];
 	this.gotHit=function(by) {
 		if (by=='wall') {
 			this.base.wipeMove();
+		} else if (by=='villan') {
+			if (rw.key('s')) {
+				rw.atEnd(loadFight);
+			};
 		};
 	};
+};
+
+var villan=function() {
+	this.base=rw.ent('villan','npc/dknightF','d1','png',16,18);
+	this.update=function() {};
+	this.hitMap=[['villan',['hero'],0,2,16,18]];
+};
+
+var loadMain=function() {
+	rw.wipeAll().loadState('main');
+};
+
+var gameOver=function() {
+	rw.wipeAll().func(createMain());
 }
+
+var createMain=function() {
+	rw.newMap('map','map01','png',320,320).display().end()
+	.newEnt(new hero()).base.display('d1',0,0,0).end()
+	.newEnt(new villan()).base.display('d1',32,32,32).end()
+	.newEnt(new wall(64,64)).base.display('',16,192,0).end()
+	.newEnt(new wall(64,48)).base.display('',144,16,0).end()
+	.newEnt(new wall(16,16)).base.display('',144,64,0).end()
+	.newEnt(new wall(32,32)).base.display('',208,16,0).end()
+	.newEnt(new wall(16,16)).base.display('',208,48,0).end();
+};
 
 var startGame=function() {
 	rw.init(320,320)
 	.setFPS(40)
 	.using('hero/rangerF','png',['u0','u1','u2','d0','d1','d2','l0','l1','l2','r0','r1','r2'])
-	.newRule('combat',new combat())
-	.newEnt(new combatStat()).base.display(' ',0,0,0).end()
-	.newMap('map','map01','png',320,320).display().end()
-	.newEnt(new hero()).base.display('d1',0,0,0).end()
-	.newEnt(new wall(64,64)).base.display('',16,192,0).end()
-	.newEnt(new wall(64,48)).base.display('',144,16,0).end()
-	.newEnt(new wall(16,16)).base.display('',144,64,0).end()
-	.newEnt(new wall(32,32)).base.display('',208,16,0).end()
-	.newEnt(new wall(16,16)).base.display('',208,48,0).end()
+	.func(createMain())
 	.start();
 };
