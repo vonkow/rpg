@@ -7,11 +7,26 @@ var hStat=function() {
 	this.init=4;
 	this.tInit=4;
 	this.alive=true;
-	this,turnEnd=false;
+	this.turnEnd=false;
+	this.pos=0;
+	this.delay=0;
 	this.turn=function() {
-		if (rw.key('z')) {
-			attack(this,rw.rules['combat'].ppl[1]);
-			this.turnEnd=true;
+		var comb=rw.rules['combat'];
+		comb.leadUp=true;
+		if (this.delay<1) {
+			if (rw.key('z')) {
+				if (comb.targeting===false) {
+					comb.targeting=3;
+					this.delay=20;
+				} else {
+					attack(this,comb.ppl[3]);
+					this.turnEnd=true;
+					comb.targeting=false;
+					comb.leadUp=false;
+				};
+			};
+		} else {
+			this.delay--;
 		};
 	};
 };
@@ -31,6 +46,7 @@ var vStat=function() {
 	this.ticker=40;
 	this.alive=true;
 	this.turnEnd=false;
+	this.pos=0;
 	this.turn=function() {
 		if (this.ticker>0) {
 			this.ticker--;
@@ -52,9 +68,14 @@ var attack=function(a,t) {
 
 var combat=function() {
 	this.base=new rw.rule(true);
-	this.ppl=[party.lead,new vStat()];
+	this.ppl=[party.lead,0,0,new vStat(),0,0,0,0,0,0];
 	this.isUp=[];
 	this.pause=false;
+	this.leadUp=false;
+	this.secondUp=false;
+	this.thirdUp=false;
+	this.targeting=false;
+	this.delay=0;
 	this.rule=function() {
 		if (this.pause==false) {
 			for (var x=0;x<this.ppl.length;x++) {
@@ -98,7 +119,20 @@ var combat=function() {
 			};
 			if (side0==false) rw.atEnd(gameOver);
 			if (side1==false) rw.atEnd(loadMain); // Change this to load get loot screen
-		}
+		};
+		if (this.delay<1) {
+			if (this.targeting!==false) {
+				if (rw.key('da')) {
+					if (this.targeting<8) this.targeting++;
+					this.delay=20;
+				} else if (rw.key('ua')) {
+					if (this.targeting>0) this.targeting--;
+					this.delay=20;
+				};
+			};
+		} else {
+			this.delay--;
+		};
 	}
 };
 
@@ -108,9 +142,41 @@ var combatHero=function(name,heroClass,gender) {
 	};
 };
 
+var combatVillan=function(name,heroClass,gender) {
+	this.base=rw.ent(name+'_combat','combat/npc',heroClass+gender,'png',32,36);
+	this.update=function() {};
+};
+
 var selectArrow=function() {
-	this.base=rw.ent('selectArrow','',' ',320,320);
+	this.base=rw.ent('selectArrow','menu',' ','png',16,16);
 	this.update=function() {
+		var comb=rw.rules['combat'];
+		if (comb.leadUp) {
+			this.base.moveTo(0,56,56);
+			this.base.changeSprite('arrowR');
+		} else if (comb.secondUp) {
+			this.base.moveTo(0,104,104);
+			this.base.changeSprite('arrowR');
+		} else if (comb.thirdUp) {
+			this.base.moveTo(0,152,152);
+			this.base.changeSprite('arrowR');
+		} else {
+			this.base.changeSprite(' ');
+		};
+	};
+};
+
+var targetArrow=function() {
+	this.base=rw.ent('targetArrow','menu',' ','png',16,16);
+	this.posArray=[['L',48,56],['L',48,104],['L',48,152],['R',208,56],['R',208,104],['R',208,152],['R',256,40],['R',256,88],['R',256,136]];
+	this.update=function() {
+		var comb=rw.rules['combat'];
+		if (comb.targeting!==false) {
+			var pos=this.posArray[comb.targeting];
+			this.base.changeSprite('arrow'+pos[0]).moveTo(pos[1],pos[2],pos[2]);
+		} else {
+			this.base.changeSprite(' ');
+		};
 	};
 };
 
@@ -118,7 +184,7 @@ var combatStat=function() {
 	this.base=rw.ent('combat','',' ','',320,320);
 	this.update=function() {
 		var comb=rw.rules['combat'];
-		var text='Hero HP: '+comb.ppl[0].hp+' Villan HP: '+comb.ppl[1].hp;
+		var text='Hero HP: '+comb.ppl[0].hp+' Villan HP: '+comb.ppl[3].hp;
 		if ((comb.isUp[0])||(comb.isUp[0]==0)) text+=' Is Up: '+comb.isUp[0];
 		this.base.detach().attach(
 			document.createTextNode(text)
@@ -142,6 +208,9 @@ var loadFight=function() {
 	.newEnt(new combatBox()).base.display('combatbox',0,192,192).end()
 	.newEnt(new heroBox('lead')).base.display('herobox',16,208).end()
 	.newEnt(new combatHero('lead','ranger','M')).base.display('rangerM',16,46,46).end()
+	.newEnt(new combatVillan('0','dknight','F')).base.display('dknightF',224,46,46).end()
+	.newEnt(new selectArrow()).base.display(' ',0,0,0).end()
+	.newEnt(new targetArrow()).base.display(' ',0,0,0).end()
 	.newEnt(new combatStat()).base.display(' ',0,0,0).end();
 };
 
