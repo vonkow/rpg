@@ -19,10 +19,12 @@ var hStat=function() {
 					comb.targeting=3;
 					this.delay=20;
 				} else {
-					attack(this,comb.ppl[3]);
-					this.turnEnd=true;
-					comb.targeting=false;
-					comb.leadUp=false;
+					if (comb.ppl[comb.targeting]!==0) {
+						attack(this,comb.ppl[comb.targeting]);
+						this.turnEnd=true;
+						comb.targeting=false;
+						comb.leadUp=false;
+					}
 				};
 			};
 		} else {
