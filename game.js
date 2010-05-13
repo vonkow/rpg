@@ -299,6 +299,7 @@ var loadMain=function() {
 };
 
 var gameOver=function() {
+	party.lead=new hStat();
 	rw.wipeAll().func(createMain());
 }
 
