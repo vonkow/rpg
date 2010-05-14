@@ -9,27 +9,20 @@ var hStat=function() {
 	this.alive=true;
 	this.turnEnd=false;
 	this.pos=0;
-	this.delay=0;
+	this.choice=false;
+	this.choices=['attack','defend'];
 	this.turn=function() {
 		var comb=rw.rules['combat'];
 		comb.leadUp=true;
-		if (this.delay<1) {
-			if (rw.key('z')) {
-				if (comb.targeting===false) {
-					comb.targeting=3;
-					this.delay=20;
-				} else {
-					if (comb.ppl[comb.targeting]!==0) {
-						attack(this,comb.ppl[comb.targeting]);
-						this.turnEnd=true;
-						comb.targeting=false;
-						comb.leadUp=false;
-					}
-				};
+		comb.choices=this.choices;
+		if (comb.act) {
+			if (comb.choice===0) {
+				attack(this,comb.ppl[comb.targeting]);
+			} else if (comb.choice===1) {
+				if (Math.random()>0.5) comb.ppl[comb.targeting].hp+=5;
 			};
-		} else {
-			this.delay--;
-		};
+			this.turnEnd=true;
+		}
 	};
 };
 
@@ -39,7 +32,7 @@ var party = {
 
 var vStat=function() {
 	this.side=1;
-	this.hp=35;
+	this.hp=20;
 	this.att=50;
 	this.dam=5;
 	this.def=0;
@@ -70,13 +63,17 @@ var attack=function(a,t) {
 
 var combat=function() {
 	this.base=new rw.rule(true);
-	this.ppl=[party.lead,0,0,new vStat(),0,0,0,0,0,0];
+	this.ppl=[party.lead,0,0,new vStat(),new vStat(),0,0,0,0,0];
 	this.isUp=[];
 	this.pause=false;
 	this.leadUp=false;
 	this.secondUp=false;
 	this.thirdUp=false;
+	this.menu=false;
+	this.choice=false;
+	this.choices=[];
 	this.targeting=false;
+	this.act=false;
 	this.delay=0;
 	this.rule=function() {
 		if (this.pause==false) {
@@ -101,6 +98,12 @@ var combat=function() {
 					if (psn.turnEnd) {
 						this.isUp.shift();
 						psn.turnEnd=false;
+						this.choice=false;
+						this.act=false;
+						this.targeting=false;
+						this.leadUp=false;
+						this.secondUp=false;
+						this.thirdUp=false;
 					};
 				} else {
 					this.isUp.shift();
@@ -122,31 +125,61 @@ var combat=function() {
 			if (side0==false) rw.atEnd(gameOver);
 			if (side1==false) rw.atEnd(loadMain); // Change this to load get loot screen
 		};
+		// Key related stuff
 		if (this.delay<1) {
-			if (this.targeting!==false) {
-				if (rw.key('da')) {
-					if (this.targeting<8) this.targeting++;
-					this.delay=20;
-				} else if (rw.key('ua')) {
-					if (this.targeting>0) this.targeting--;
-					this.delay=20;
-				};
-			};
+			if ((this.leadUp)||(this.secondUp)||(this.thirdUp)) {
+				if ((this.targeting===false)&&(this.menu===false)) {
+					if (rw.key('z')) {
+						this.menu=true;
+						this.choice=0;
+						this.delay=10;
+					};
+				} else if (this.targeting!==false) {
+					if (rw.key('da')) {
+						if (this.targeting<8) this.targeting++;
+						this.delay=10;
+					} else if (rw.key('ua')) {
+						if (this.targeting>0) this.targeting--;
+						this.delay=10;
+					} else if (rw.key('z')) {
+						this.act=true;
+					};
+				} else if (this.menu!==false) {
+					if (rw.key('da')) {
+						if (this.choice<this.choices.length-1) this.choice++;
+						this.delay=10;
+					} else if (rw.key('ua')) {
+						if (this.choice>0) this.choice--;
+					} else if (rw.key('z')) {
+						this.menu=false;
+						this.targeting=3;
+						this.delay=10;
+					};
+				}
+			}
 		} else {
 			this.delay--;
 		};
 	}
 };
 
-var combatHero=function(name,heroClass,gender) {
-	this.base=rw.ent(name+'_combat','combat/hero',heroClass+gender,'png',32,36);
+var combatHero=function(num,heroClass,gender) {
+	this.base=rw.ent(num+'_combat','combat/hero',heroClass+gender,'png',32,36);
+	this.num=num;
 	this.update=function() {
 	};
 };
 
-var combatVillan=function(name,heroClass,gender) {
-	this.base=rw.ent(name+'_combat','combat/npc',heroClass+gender,'png',32,36);
-	this.update=function() {};
+var combatVillan=function(num,heroClass,gender) {
+	this.base=rw.ent(num+'_combat','combat/npc',heroClass+gender,'png',32,36);
+	this.num=num;
+	this.alive=true;
+	this.update=function() {
+		if ((rw.rules['combat'].ppl[this.num].alive==false)&&(this.alive)) {
+			this.alive=false;
+			this.base.shiftSprite(-32,0);
+		};
+	};
 };
 
 var selectArrow=function() {
@@ -168,6 +201,31 @@ var selectArrow=function() {
 	};
 };
 
+var combatMenu=function() {
+	this.base=rw.ent('combatmenu','menu',' ','png',112,64);
+	this.update=function() {
+		var comb=rw.rules['combat'];
+		if (comb.menu===false) {
+			this.base.changeSprite(' ');
+		} else {
+			this.base.changeSprite('combatpopup');
+		};
+	};
+};
+
+var choiceArrow=function() {
+	this.base=rw.ent('choicearrow','menu',' ','png',16,16);
+	this.update=function() {
+		var comb=rw.rules['combat'];
+		if (comb.menu!==false) {
+			this.base.changeSprite('arrowR')
+			.moveTo(112,80+(16*comb.choice));
+		} else {
+			this.base.changeSprite(' ');
+		};
+	};
+};
+
 var targetArrow=function() {
 	this.base=rw.ent('targetArrow','menu',' ','png',16,16);
 	this.posArray=[['L',48,56],['L',48,104],['L',48,152],['R',208,56],['R',208,104],['R',208,152],['R',256,40],['R',256,88],['R',256,136]];
@@ -179,6 +237,17 @@ var targetArrow=function() {
 		} else {
 			this.base.changeSprite(' ');
 		};
+	};
+};
+
+var hpStat=function(who) {
+	this.base=rw.ent('stats_'+who,'',' ','',64,16);
+	this.update=function() {
+		var comb=rw.rules['combat'];
+		var text='HP: '+comb.ppl[who].hp;
+		this.base.detach().attach(
+			document.createTextNode(text)
+		);
 	};
 };
 
@@ -209,10 +278,14 @@ var loadFight=function() {
 	.newRule('combat', new combat())
 	.newEnt(new combatBox()).base.display('combatbox',0,192,192).end()
 	.newEnt(new heroBox('lead')).base.display('herobox',16,208).end()
-	.newEnt(new combatHero('lead','ranger','M')).base.display('rangerM',16,46,46).end()
-	.newEnt(new combatVillan('0','dknight','F')).base.display('dknightF',224,46,46).end()
+	.newEnt(new combatHero('0','ranger','M')).base.display('rangerM',16,46,46).end()
+	.newEnt(new combatVillan('3','dknight','F')).base.display('dknightF',224,46,46).end()
+	.newEnt(new combatVillan('4','dknight','F')).base.display('dknightF',224,94,94).end()
 	.newEnt(new selectArrow()).base.display(' ',0,0,0).end()
+	.newEnt(new combatMenu()).base.display(' ',96,64,64).end()
+	.newEnt(new choiceArrow()).base.display(' ',112,80,80).end()
 	.newEnt(new targetArrow()).base.display(' ',0,0,0).end()
+	.newEnt(new hpStat(0)).base.display(' ',232,216,216).end()
 	.newEnt(new combatStat()).base.display(' ',0,0,0).end();
 };
 
