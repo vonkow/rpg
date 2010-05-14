@@ -136,20 +136,21 @@ var combat=function() {
 					};
 				} else if (this.targeting!==false) {
 					if (rw.key('da')) {
-						if (this.targeting<8) this.targeting++;
+						(this.targeting<8) ? this.targeting++:this.targeting=0;
 						this.delay=10;
 					} else if (rw.key('ua')) {
-						if (this.targeting>0) this.targeting--;
+						(this.targeting>0) ? this.targeting--:this.targeting=8;
 						this.delay=10;
 					} else if (rw.key('z')) {
 						this.act=true;
 					};
 				} else if (this.menu!==false) {
 					if (rw.key('da')) {
-						if (this.choice<this.choices.length-1) this.choice++;
+						(this.choice<this.choices.length-1) ? this.choice++:this.choice=0;
 						this.delay=10;
 					} else if (rw.key('ua')) {
-						if (this.choice>0) this.choice--;
+						(this.choice>0) ? this.choice--:this.choice=this.choices.length-1;
+						this.delay=10;
 					} else if (rw.key('z')) {
 						this.menu=false;
 						this.targeting=3;
