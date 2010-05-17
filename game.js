@@ -3,14 +3,18 @@ var hStat=function() {
 	this.hp=20;
 	this.att=50;
 	this.dam=5;
-	this.def=25;
+	this.def=50;
 	this.init=4;
 	this.tInit=4;
 	this.alive=true;
 	this.turnEnd=false;
 	this.pos=0;
 	this.choice=false;
-	this.choices=['attack','defend'];
+	this.choices=[
+		['attack','defend'],
+		['heal'],
+		['item']
+	];
 	this.turn=function() {
 		var comb=rw.rules['combat'];
 		comb.leadUp=true;
@@ -35,7 +39,7 @@ var vStat=function() {
 	this.hp=20;
 	this.att=50;
 	this.dam=5;
-	this.def=0;
+	this.def=25;
 	this.init=8;
 	this.tInit=8;
 	this.ticker=40;
@@ -54,8 +58,8 @@ var vStat=function() {
 };
 
 var attack=function(a,t) {
-	var roll = Math.round(Math.random()*100)-t.def;
-	if (roll>=a.att) {
+	var roll = (a.att-t.def)+Math.round(Math.random()*100);
+	if (roll>=50) {
 		t.hp-=a.dam;
 	};
 	if (t.hp<=0) t.alive=false;
@@ -71,6 +75,7 @@ var combat=function() {
 	this.thirdUp=false;
 	this.menu=false;
 	this.choice=false;
+	this.subChoice=false;
 	this.choices=[];
 	this.targeting=false;
 	this.act=false;
@@ -99,6 +104,7 @@ var combat=function() {
 						this.isUp.shift();
 						psn.turnEnd=false;
 						this.choice=false;
+						this.subChoice=false;
 						this.act=false;
 						this.targeting=false;
 						this.leadUp=false;
@@ -134,6 +140,34 @@ var combat=function() {
 						this.choice=0;
 						this.delay=10;
 					};
+				} else if (this.menu!==false) {
+					if (this.subChoice===false) {
+						if (rw.key('da')) {
+							(this.choice<this.choices.length-1) ? this.choice++:this.choice=0;
+							this.delay=10;
+						} else if (rw.key('ua')) {
+							(this.choice>0) ? this.choice--:this.choice=this.choices.length-1;
+							this.delay=10;
+						} else if (rw.key('z')) {
+							this.subChoice=0;
+							this.delay=10;
+						};
+					} else {
+						if (rw.key('da')) {
+							(this.subChoice<this.choices.length-1) ? this.subChoice++:this.subChoice=0;
+							this.delay=10;
+						} else if (rw.key('ua')) {
+							(this.subChoice>0) ? this.subChoice--:this.subChoice=this.choices.length-1;
+							this.delay=10;
+						} else if (rw.key('z')) {
+							this.menu=false;
+							this.targeting=3;
+							this.delay=10;
+						} else if (rw.key('x')) {
+							this.subChoice=false;
+							this.delay=10;
+						};
+					};
 				} else if (this.targeting!==false) {
 					if (rw.key('da')) {
 						(this.targeting<8) ? this.targeting++:this.targeting=0;
@@ -143,17 +177,9 @@ var combat=function() {
 						this.delay=10;
 					} else if (rw.key('z')) {
 						this.act=true;
-					};
-				} else if (this.menu!==false) {
-					if (rw.key('da')) {
-						(this.choice<this.choices.length-1) ? this.choice++:this.choice=0;
-						this.delay=10;
-					} else if (rw.key('ua')) {
-						(this.choice>0) ? this.choice--:this.choice=this.choices.length-1;
-						this.delay=10;
-					} else if (rw.key('z')) {
-						this.menu=false;
-						this.targeting=3;
+					} else if (rw.key('x')) {
+						this.targeting=false;
+						this.menu=true;
 						this.delay=10;
 					};
 				}
@@ -183,6 +209,7 @@ var combatVillan=function(num,heroClass,gender) {
 	};
 };
 
+// Arrow for displaying which hero is up
 var selectArrow=function() {
 	this.base=rw.ent('selectArrow','menu',' ','png',16,16);
 	this.update=function() {
@@ -202,8 +229,9 @@ var selectArrow=function() {
 	};
 };
 
+// Pop-up menu of actions a hero can take
 var combatMenu=function() {
-	this.base=rw.ent('combatmenu','menu',' ','png',112,64);
+	this.base=rw.ent('combatmenu','menu',' ','png',112,80);
 	this.update=function() {
 		var comb=rw.rules['combat'];
 		if (comb.menu===false) {
@@ -214,19 +242,21 @@ var combatMenu=function() {
 	};
 };
 
+// Arrow for choosing what action to take
 var choiceArrow=function() {
 	this.base=rw.ent('choicearrow','menu',' ','png',16,16);
 	this.update=function() {
 		var comb=rw.rules['combat'];
 		if (comb.menu!==false) {
 			this.base.changeSprite('arrowR')
-			.moveTo(112,80+(16*comb.choice));
+			.moveTo(108,72+(16*comb.choice));
 		} else {
 			this.base.changeSprite(' ');
 		};
 	};
 };
 
+// Arrow for targeting 
 var targetArrow=function() {
 	this.base=rw.ent('targetArrow','menu',' ','png',16,16);
 	this.posArray=[['L',48,56],['L',48,104],['L',48,152],['R',208,56],['R',208,104],['R',208,152],['R',256,40],['R',256,88],['R',256,136]];
@@ -241,6 +271,7 @@ var targetArrow=function() {
 	};
 };
 
+// Hero Hp ent
 var hpStat=function(who) {
 	this.base=rw.ent('stats_'+who,'',' ','',64,16);
 	this.update=function() {
@@ -252,11 +283,12 @@ var hpStat=function(who) {
 	};
 };
 
+// Temp Ent for showing Combat Stats
 var combatStat=function() {
 	this.base=rw.ent('combat','',' ','',320,320);
 	this.update=function() {
 		var comb=rw.rules['combat'];
-		var text='Hero HP: '+comb.ppl[0].hp+' Villan HP: '+comb.ppl[3].hp;
+		var text='Villan1 HP: '+comb.ppl[3].hp+' Villan2 HP: '+comb.ppl[4].hp;
 		if ((comb.isUp[0])||(comb.isUp[0]==0)) text+=' Is Up: '+comb.isUp[0];
 		this.base.detach().attach(
 			document.createTextNode(text)
@@ -264,11 +296,13 @@ var combatStat=function() {
 	};
 };
 
+// Area where hero stats go
 var combatBox=function() {
 	this.base=rw.ent('combatBox','menu','combatbox','png',320,128);
 	this.update=function() {};
 };
 
+// Area for one hero's stats
 var heroBox=function(who) {
 	this.base=rw.ent(who+'_heroBox','menu','herobox','png',288,32);
 	this.update=function() {};
@@ -283,8 +317,8 @@ var loadFight=function() {
 	.newEnt(new combatVillan('3','dknight','F')).base.display('dknightF',224,46,46).end()
 	.newEnt(new combatVillan('4','dknight','F')).base.display('dknightF',224,94,94).end()
 	.newEnt(new selectArrow()).base.display(' ',0,0,0).end()
-	.newEnt(new combatMenu()).base.display(' ',96,64,64).end()
-	.newEnt(new choiceArrow()).base.display(' ',112,80,80).end()
+	.newEnt(new combatMenu()).base.display(' ',96,56,56).end()
+	.newEnt(new choiceArrow()).base.display(' ',108,72,72).end()
 	.newEnt(new targetArrow()).base.display(' ',0,0,0).end()
 	.newEnt(new hpStat(0)).base.display(' ',232,216,216).end()
 	.newEnt(new combatStat()).base.display(' ',0,0,0).end();
