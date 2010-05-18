@@ -445,7 +445,29 @@ var createMain=function() {
 	.newEnt(new wall(64,48)).base.display('',144,16,0).end()
 	.newEnt(new wall(16,16)).base.display('',144,64,0).end()
 	.newEnt(new wall(32,32)).base.display('',208,16,0).end()
-	.newEnt(new wall(16,16)).base.display('',208,48,0).end();
+	.newEnt(new wall(16,16)).base.display('',208,48,0).end()
+	.newEnt(new textThing()).base.display(' ',0,308,308)
+	.addChild('0','text',0,0,0,8,12,-64,-24)
+	.addChild('1','text',8,0,0,8,12,-72,-48)
+	.addChild('2','text',16,0,0,8,12,-8,0);
+};
+
+var textLine=function(name,cols,text,x,y,z) {
+	var txtEnt=rw.newEnt(new function() {
+		this.base=rw.ent(name,'menu',' ','png',cols*8,12);
+		this.cols=cols;
+		this.update=function() {};
+	});
+	txtEnt.base.display(' ',x,y,z);
+	for (var p=0;p<text.length;p++) {
+		txtEnt.base.addChild(p,'text',p*8,0,0,8,12,0,0);
+	};
+};
+
+var textThing=function() {
+	this.base=rw.ent('textthing','menu',' ','png',24,12);
+	this.update=function() {
+	};
 };
 
 var startGame=function() {
