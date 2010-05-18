@@ -230,14 +230,14 @@ var selectArrow=function() {
 };
 
 // Pop-up menu of actions a hero can take
-var combatMenu=function() {
-	this.base=rw.ent('combatmenu','menu',' ','png',112,80);
+var selectMenu=function() {
+	this.base=rw.ent('selectmenu','menu',' ','png',112,80);
 	this.update=function() {
 		var comb=rw.rules['combat'];
 		if (comb.menu===false) {
 			this.base.changeSprite(' ');
 		} else {
-			this.base.changeSprite('combatpopup');
+			this.base.changeSprite('selectmenu');
 		};
 	};
 };
@@ -250,6 +250,31 @@ var choiceArrow=function() {
 		if (comb.menu!==false) {
 			this.base.changeSprite('arrowR')
 			.moveTo(108,72+(16*comb.choice));
+		} else {
+			this.base.changeSprite(' ');
+		};
+	};
+};
+
+var subMenu=function() {
+	this.base=rw.ent('submenu','menu',' ','png',128,128);
+	this.update=function() {
+		var comb=rw.rules['combat'];
+		if ((comb.subChoice!==false)&&(comb.targeting===false)) {
+			this.base.changeSprite('subselectmenu');
+		} else {
+			this.base.changeSprite(' ');
+		};
+	};
+};
+
+var subArrow=function() {
+	this.base=rw.ent('subarrow','menu',' ','png',16,16);
+	this.update=function() {
+		var comb=rw.rules['combat'];
+		if ((comb.subChoice!==false)&&(comb.targeting===false)) {
+			this.base.changeSprite('arrowR')
+			.moveTo(0,0,0);
 		} else {
 			this.base.changeSprite(' ');
 		};
@@ -317,8 +342,9 @@ var loadFight=function() {
 	.newEnt(new combatVillan('3','dknight','F')).base.display('dknightF',224,46,46).end()
 	.newEnt(new combatVillan('4','dknight','F')).base.display('dknightF',224,94,94).end()
 	.newEnt(new selectArrow()).base.display(' ',0,0,0).end()
-	.newEnt(new combatMenu()).base.display(' ',96,56,56).end()
+	.newEnt(new selectMenu()).base.display(' ',96,56,56).end()
 	.newEnt(new choiceArrow()).base.display(' ',108,72,72).end()
+	.newEnt(new subMenu()).base.display(' ',88,32,160).end()
 	.newEnt(new targetArrow()).base.display(' ',0,0,0).end()
 	.newEnt(new hpStat(0)).base.display(' ',232,216,216).end()
 	.newEnt(new combatStat()).base.display(' ',0,0,0).end();
