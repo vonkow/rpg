@@ -446,27 +446,39 @@ var createMain=function() {
 	.newEnt(new wall(16,16)).base.display('',144,64,0).end()
 	.newEnt(new wall(32,32)).base.display('',208,16,0).end()
 	.newEnt(new wall(16,16)).base.display('',208,48,0).end()
-	.newEnt(new textThing()).base.display(' ',0,308,308)
-	.addChild('0','text',0,0,0,8,12,-64,-24)
-	.addChild('1','text',8,0,0,8,12,-72,-48)
-	.addChild('2','text',16,0,0,8,12,-8,0);
+	.func(textLine('test',16,'Arrg! Hi whirld?',0,308,308,function(){
+		this.base.move(1,0);
+	}
+	));
 };
 
-var textLine=function(name,cols,text,x,y,z) {
+
+var alp=[
+	[' ','!','"','#','$','%','&',"'",'(',')','*','+',',','-','.','/'],
+	['0','1','2','3','4','5','6','7','8','9',':',';','<','=','>','?'],
+	['@','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O'],
+	['P','Q','R','S','T','U','V','W','X','Y','Z','[','\\',']','^','_'],
+	['`','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o'],
+	['p','q','r','s','t','u','v','w','x','y','z','{','|','}','~','']
+];
+
+var textLine=function(name,cols,text,x,y,z,update) {
 	var txtEnt=rw.newEnt(new function() {
 		this.base=rw.ent(name,'menu',' ','png',cols*8,12);
 		this.cols=cols;
-		this.update=function() {};
+		this.update=update;
 	});
 	txtEnt.base.display(' ',x,y,z);
 	for (var p=0;p<text.length;p++) {
-		txtEnt.base.addChild(p,'text',p*8,0,0,8,12,0,0);
-	};
-};
-
-var textThing=function() {
-	this.base=rw.ent('textthing','menu',' ','png',24,12);
-	this.update=function() {
+		for (var q=0;q<alp.length;q++) {
+			var row=alp[q];
+			for (var r=0;r<row.length;r++) {
+				if (row[r]===text[p]) {
+					var pos=[r*8,q*12];
+				};
+			};
+		};
+		txtEnt.base.addChild(p,'text',p*8,0,0,8,12,-pos[0],-pos[1]);
 	};
 };
 
