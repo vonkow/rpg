@@ -80,7 +80,9 @@ var combat=function() {
 	this.targeting=false;
 	this.act=false;
 	this.delay=0;
+	this.change=true;
 	this.rule=function() {
+		this.change=false;
 		if (this.pause==false) {
 			for (var x=0;x<this.ppl.length;x++) {
 				var psn = this.ppl[x];
@@ -139,48 +141,60 @@ var combat=function() {
 						this.menu=true;
 						this.choice=0;
 						this.delay=10;
+						this.change=true;
 					};
 				} else if (this.menu!==false) {
 					if (this.subChoice===false) {
 						if (rw.key('da')) {
 							(this.choice<this.choices.length-1) ? this.choice++:this.choice=0;
 							this.delay=10;
+							this.change=true;
 						} else if (rw.key('ua')) {
 							(this.choice>0) ? this.choice--:this.choice=this.choices.length-1;
 							this.delay=10;
+							this.change=true;
 						} else if (rw.key('z')) {
 							this.subChoice=0;
 							this.delay=10;
+							this.change=true;
 						};
 					} else {
 						if (rw.key('da')) {
 							(this.subChoice<this.choices.length-1) ? this.subChoice++:this.subChoice=0;
 							this.delay=10;
+							this.change=true;
 						} else if (rw.key('ua')) {
 							(this.subChoice>0) ? this.subChoice--:this.subChoice=this.choices.length-1;
 							this.delay=10;
+							this.change=true;
 						} else if (rw.key('z')) {
 							this.menu=false;
 							this.targeting=3;
 							this.delay=10;
+							this.change=true;
 						} else if (rw.key('x')) {
 							this.subChoice=false;
 							this.delay=10;
+							this.change=true;
 						};
 					};
 				} else if (this.targeting!==false) {
 					if (rw.key('da')) {
 						(this.targeting<8) ? this.targeting++:this.targeting=0;
 						this.delay=10;
+						this.change=true;
 					} else if (rw.key('ua')) {
 						(this.targeting>0) ? this.targeting--:this.targeting=8;
 						this.delay=10;
+						this.change=true;
 					} else if (rw.key('z')) {
 						this.act=true;
+						this.change=true;
 					} else if (rw.key('x')) {
 						this.targeting=false;
 						this.menu=true;
 						this.delay=10;
+						this.change=true;
 					};
 				}
 			}
@@ -308,6 +322,61 @@ var hpStat=function(who) {
 	};
 };
 
+var getChars=function(text) {
+	var hpChars=[];
+	for (var p=0;p<text.length;p++) {
+		for (var q=0;q<alp.length;q++) {
+			var row=alp[q];
+			for (var r=0;r<row.length;r++) {
+				if (row[r]===text[p]) {
+					hpChars[p]=[r*8,q*12];
+				};
+			};
+		};
+	};
+	return hpChars;
+};
+
+var refreshHp=function(me) {
+	var comb=rw.rules['combat'];
+	if (comb.change) {
+		var psn=me.who;
+		var hp=comb.ppl[me.who].hp+'';
+		while (hp.length<3) {
+			hp=' '+hp;
+		};
+		//var hpChars=getChars(hp);
+		me.base.changeChild(4,'text',-getChars(hp)[0][0],-getChars(hp)[0][1]);
+		me.base.changeChild(5,'text',-getChars(hp)[1][0],-getChars(hp)[1][1]);
+		me.base.changeChild(6,'text',-getChars(hp)[2][0],-getChars(hp)[2][1]);
+	} else {
+		var hp='';
+	};
+};
+
+
+var newHpStat=function(who,x,y) {
+	var hpEnt=textLine('hpstat_'+who,7,'HP:    ',x,y,y,function(){
+		var comb=rw.rules['combat'];
+		if (comb.change) {
+			var psn=this.who;
+			var hp=comb.ppl[this.who].hp+'';
+			while (hp.length<3) {
+				hp=' '+hp;
+			};
+			//var hpChars=getChars(hp);
+			alert(getChars(hp));
+			this.base.changeChild(4,'text',-getChars(hp)[0][0],-getChars(hp)[0][1]);
+			this.base.changeChild(5,'text',-getChars(hp)[1][0],-getChars(hp)[1][1]);
+			this.base.changeChild(6,'text',-getChars(hp)[2][0],-getChars(hp)[2][1]);
+		} else {
+			var hp='';
+		};
+	});
+	hpEnt.who=who;
+};
+
+
 // Temp Ent for showing Combat Stats
 var combatStat=function() {
 	this.base=rw.ent('combat','',' ','',320,320);
@@ -346,8 +415,10 @@ var loadFight=function() {
 	.newEnt(new choiceArrow()).base.display(' ',108,72,72).end()
 	.newEnt(new subMenu()).base.display(' ',88,32,160).end()
 	.newEnt(new targetArrow()).base.display(' ',0,0,0).end()
-	.newEnt(new hpStat(0)).base.display(' ',232,216,216).end()
-	.newEnt(new combatStat()).base.display(' ',0,0,0).end();
+	.newEnt(new combatStat()).base.display(' ',0,0,0).end()
+	.func(newHpStat(0,236,220))
+	.func(newHpStat(3,0,0))
+	.func(newHpStat(4,80,0));
 };
 
 
@@ -480,6 +551,7 @@ var textLine=function(name,cols,text,x,y,z,update) {
 		};
 		txtEnt.base.addChild(p,'text',p*8,0,0,8,12,-pos[0],-pos[1]);
 	};
+	return txtEnt;
 };
 
 var startGame=function() {
