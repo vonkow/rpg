@@ -112,6 +112,7 @@ var combat=function() {
 						this.leadUp=false;
 						this.secondUp=false;
 						this.thirdUp=false;
+						this.change=true;
 					};
 				} else {
 					this.isUp.shift();
@@ -310,18 +311,6 @@ var targetArrow=function() {
 	};
 };
 
-// Hero Hp ent
-var hpStat=function(who) {
-	this.base=rw.ent('stats_'+who,'',' ','',64,16);
-	this.update=function() {
-		var comb=rw.rules['combat'];
-		var text='HP: '+comb.ppl[who].hp;
-		this.base.detach().attach(
-			document.createTextNode(text)
-		);
-	};
-};
-
 var getChars=function(text) {
 	var hpChars=[];
 	for (var p=0;p<text.length;p++) {
@@ -345,17 +334,15 @@ var refreshHp=function(me) {
 		while (hp.length<3) {
 			hp=' '+hp;
 		};
-		//var hpChars=getChars(hp);
-		me.base.changeChild(4,'text',-getChars(hp)[0][0],-getChars(hp)[0][1]);
-		me.base.changeChild(5,'text',-getChars(hp)[1][0],-getChars(hp)[1][1]);
-		me.base.changeChild(6,'text',-getChars(hp)[2][0],-getChars(hp)[2][1]);
-	} else {
-		var hp='';
+		var hpChars=getChars(hp);
+		me.base.changeChild(4,'text',-hpChars[0][0],-hpChars[0][1]);
+		me.base.changeChild(5,'text',-hpChars[1][0],-hpChars[1][1]);
+		me.base.changeChild(6,'text',-hpChars[2][0],-hpChars[2][1]);
 	};
 };
 
 
-var newHpStat=function(who,x,y) {
+var hpStat=function(who,x,y) {
 	var hpEnt=textLine('hpstat_'+who,7,'HP:    ',x,y,y,function(){
 		var comb=rw.rules['combat'];
 		if (comb.change) {
@@ -364,11 +351,10 @@ var newHpStat=function(who,x,y) {
 			while (hp.length<3) {
 				hp=' '+hp;
 			};
-			//var hpChars=getChars(hp);
-			alert(getChars(hp));
-			this.base.changeChild(4,'text',-getChars(hp)[0][0],-getChars(hp)[0][1]);
-			this.base.changeChild(5,'text',-getChars(hp)[1][0],-getChars(hp)[1][1]);
-			this.base.changeChild(6,'text',-getChars(hp)[2][0],-getChars(hp)[2][1]);
+			var hpChars=getChars(hp);
+			this.base.changeChild(4,'text',-hpChars[0][0],-hpChars[0][1]);
+			this.base.changeChild(5,'text',-hpChars[1][0],-hpChars[1][1]);
+			this.base.changeChild(6,'text',-hpChars[2][0],-hpChars[2][1]);
 		} else {
 			var hp='';
 		};
@@ -415,10 +401,9 @@ var loadFight=function() {
 	.newEnt(new choiceArrow()).base.display(' ',108,72,72).end()
 	.newEnt(new subMenu()).base.display(' ',88,32,160).end()
 	.newEnt(new targetArrow()).base.display(' ',0,0,0).end()
-	.newEnt(new combatStat()).base.display(' ',0,0,0).end()
-	.func(newHpStat(0,236,220))
-	.func(newHpStat(3,0,0))
-	.func(newHpStat(4,80,0));
+	.func(hpStat(0,236,220))
+	.func(hpStat(3,0,0))
+	.func(hpStat(4,80,0));
 };
 
 
@@ -465,14 +450,14 @@ var hero=function() {
 						this.ani++;
 					} else {
 						this.ani--;
-						this.moveDir=!this.moveDir;
+						this.moveDir=true;
 					};
 				} else {
 					if (this.ani>0) {
 						this.ani--;
 					} else {
 						this.ani++;
-						this.moveDir=!this.moveDir;
+						this.moveDir=false;
 					};
 				};
 			};
