@@ -21,13 +21,13 @@ var hStat=function() {
 		comb.choices=this.choices;
 		if (comb.act) {
 			if (comb.choice===0) {
-				attack(this,comb.ppl[comb.targeting]);
+				attack(this,comb.ppl[comb.targeting])
 			} else if (comb.choice===1) {
-				if (Math.random()>0.5) comb.ppl[comb.targeting].hp+=5;
+				if (Math.random()>0.5) comb.ppl[comb.targeting].hp+=5
 			};
-			this.turnEnd=true;
+			this.turnEnd=true
 		}
-	};
+	}
 };
 
 var party = {
@@ -48,21 +48,21 @@ var vStat=function() {
 	this.pos=0;
 	this.turn=function() {
 		if (this.ticker>0) {
-			this.ticker--;
+			this.ticker--
 		} else {
 			this.ticker=40;
 			attack(this,rw.rules['combat'].ppl[0]);
-			this.turnEnd=true;
-		};
-	};
+			this.turnEnd=true
+		}
+	}
 };
 
 var attack=function(a,t) {
 	var roll = (a.att-t.def)+Math.round(Math.random()*100);
 	if (roll>=50) {
-		t.hp-=a.dam;
+		t.hp-=a.dam
 	};
-	if (t.hp<=0) t.alive=false;
+	if (t.hp<=0) t.alive=false
 };
 
 var combat=function() {
@@ -88,12 +88,12 @@ var combat=function() {
 				var psn = this.ppl[x];
 				if (psn.alive) {
 					if (psn.tInit>0) {
-						psn.tInit--;
+						psn.tInit--
 					};
 					if (psn.tInit==0) {
 						psn.tInit=psn.init;
 						this.isUp.push(x);
-						this.pause=true;
+						this.pause=true
 					}
 				}
 			}
@@ -112,27 +112,27 @@ var combat=function() {
 						this.leadUp=false;
 						this.secondUp=false;
 						this.thirdUp=false;
-						this.change=true;
-					};
+						this.change=true
+					}
 				} else {
-					this.isUp.shift();
-				};
+					this.isUp.shift()
+				}
 			} else {
-				this.pause=false;
-			}
+				this.pause=false
+			};
 			var side0=false,side1=false;
 			for(var x=0;x<this.ppl.length;x++) {
 				var psn=this.ppl[x];
 				if (psn.alive) {
 					if(psn.side==0) {
-						side0=true;
+						side0=true
 					} else {
-						side1=true;
-					};
-				};
+						side1=true
+					}
+				}
 			};
 			if (side0==false) rw.atEnd(gameOver);
-			if (side1==false) rw.atEnd(loadMain); // Change this to load get loot screen
+			if (side1==false) rw.atEnd(loadMain) // Change this to load get loot screen
 		};
 		// Key related stuff
 		if (this.delay<1) {
@@ -142,66 +142,66 @@ var combat=function() {
 						this.menu=true;
 						this.choice=0;
 						this.delay=10;
-						this.change=true;
-					};
+						this.change=true
+					}
 				} else if (this.menu!==false) {
 					if (this.subChoice===false) {
 						if (rw.key('da')) {
 							(this.choice<this.choices.length-1) ? this.choice++:this.choice=0;
 							this.delay=10;
-							this.change=true;
+							this.change=true
 						} else if (rw.key('ua')) {
 							(this.choice>0) ? this.choice--:this.choice=this.choices.length-1;
 							this.delay=10;
-							this.change=true;
+							this.change=true
 						} else if (rw.key('z')) {
 							this.subChoice=0;
 							this.delay=10;
-							this.change=true;
-						};
+							this.change=true
+						}
 					} else {
 						if (rw.key('da')) {
 							(this.subChoice<this.choices.length-1) ? this.subChoice++:this.subChoice=0;
 							this.delay=10;
-							this.change=true;
+							this.change=true
 						} else if (rw.key('ua')) {
 							(this.subChoice>0) ? this.subChoice--:this.subChoice=this.choices.length-1;
 							this.delay=10;
-							this.change=true;
+							this.change=true
 						} else if (rw.key('z')) {
 							this.menu=false;
 							this.targeting=3;
 							this.delay=10;
-							this.change=true;
+							this.change=true
 						} else if (rw.key('x')) {
 							this.subChoice=false;
 							this.delay=10;
-							this.change=true;
-						};
-					};
+							this.change=true
+						}
+					}
 				} else if (this.targeting!==false) {
 					if (rw.key('da')) {
 						(this.targeting<8) ? this.targeting++:this.targeting=0;
 						this.delay=10;
-						this.change=true;
+						this.change=true
 					} else if (rw.key('ua')) {
 						(this.targeting>0) ? this.targeting--:this.targeting=8;
 						this.delay=10;
-						this.change=true;
+						this.change=true
 					} else if (rw.key('z')) {
 						this.act=true;
-						this.change=true;
+						this.change=true
 					} else if (rw.key('x')) {
 						this.targeting=false;
 						this.menu=true;
 						this.delay=10;
-						this.change=true;
-					};
+						this.change=true
+					}
 				}
 			}
 		} else {
-			this.delay--;
-		};
+			this.delay--
+		}
 	}
 };
 
@@ -209,7 +209,7 @@ var combatHero=function(num,heroClass,gender) {
 	this.base=rw.ent(num+'_combat','combat/hero',heroClass+gender,'png',32,36);
 	this.num=num;
 	this.update=function() {
-	};
+	}
 };
 
 var combatVillan=function(num,heroClass,gender) {
@@ -219,9 +219,9 @@ var combatVillan=function(num,heroClass,gender) {
 	this.update=function() {
 		if ((rw.rules['combat'].ppl[this.num].alive==false)&&(this.alive)) {
 			this.alive=false;
-			this.base.shiftSprite(-32,0);
-		};
-	};
+			this.base.shiftSprite(-32,0)
+		}
+	}
 };
 
 // Arrow for displaying which hero is up
@@ -231,17 +231,17 @@ var selectArrow=function() {
 		var comb=rw.rules['combat'];
 		if (comb.leadUp) {
 			this.base.moveTo(0,56,56);
-			this.base.changeSprite('arrowR');
+			this.base.changeSprite('arrowR')
 		} else if (comb.secondUp) {
 			this.base.moveTo(0,104,104);
-			this.base.changeSprite('arrowR');
+			this.base.changeSprite('arrowR')
 		} else if (comb.thirdUp) {
 			this.base.moveTo(0,152,152);
-			this.base.changeSprite('arrowR');
+			this.base.changeSprite('arrowR')
 		} else {
-			this.base.changeSprite(' ');
-		};
-	};
+			this.base.changeSprite(' ')
+		}
+	}
 };
 
 // Pop-up menu of actions a hero can take
@@ -250,11 +250,11 @@ var selectMenu=function() {
 	this.update=function() {
 		var comb=rw.rules['combat'];
 		if (comb.menu===false) {
-			this.base.changeSprite(' ');
+			this.base.changeSprite(' ')
 		} else {
-			this.base.changeSprite('selectmenu');
-		};
-	};
+			this.base.changeSprite('selectmenu')
+		}
+	}
 };
 
 // Arrow for choosing what action to take
@@ -264,11 +264,11 @@ var choiceArrow=function() {
 		var comb=rw.rules['combat'];
 		if (comb.menu!==false) {
 			this.base.changeSprite('arrowR')
-			.moveTo(108,72+(16*comb.choice));
+			.moveTo(108,72+(16*comb.choice))
 		} else {
-			this.base.changeSprite(' ');
-		};
-	};
+			this.base.changeSprite(' ')
+		}
+	}
 };
 
 var subMenu=function() {
@@ -276,11 +276,11 @@ var subMenu=function() {
 	this.update=function() {
 		var comb=rw.rules['combat'];
 		if ((comb.subChoice!==false)&&(comb.targeting===false)) {
-			this.base.changeSprite('subselectmenu');
+			this.base.changeSprite('subselectmenu')
 		} else {
-			this.base.changeSprite(' ');
-		};
-	};
+			this.base.changeSprite(' ')
+		}
+	}
 };
 
 var subArrow=function() {
@@ -289,11 +289,11 @@ var subArrow=function() {
 		var comb=rw.rules['combat'];
 		if ((comb.subChoice!==false)&&(comb.targeting===false)) {
 			this.base.changeSprite('arrowR')
-			.moveTo(0,0,0);
+			.moveTo(0,0,0)
 		} else {
-			this.base.changeSprite(' ');
-		};
-	};
+			this.base.changeSprite(' ')
+		}
+	}
 };
 
 // Arrow for targeting 
@@ -304,11 +304,11 @@ var targetArrow=function() {
 		var comb=rw.rules['combat'];
 		if (comb.targeting!==false) {
 			var pos=this.posArray[comb.targeting];
-			this.base.changeSprite('arrow'+pos[0]).moveTo(pos[1],pos[2],pos[2]);
+			this.base.changeSprite('arrow'+pos[0]).moveTo(pos[1],pos[2],pos[2])
 		} else {
-			this.base.changeSprite(' ');
-		};
-	};
+			this.base.changeSprite(' ')
+		}
+	}
 };
 
 var getChars=function(text) {
@@ -318,12 +318,12 @@ var getChars=function(text) {
 			var row=alp[q];
 			for (var r=0;r<row.length;r++) {
 				if (row[r]===text[p]) {
-					hpChars[p]=[r*8,q*12];
-				};
-			};
-		};
+					hpChars[p]=[r*8,q*12]
+				}
+			}
+		}
 	};
-	return hpChars;
+	return hpChars
 };
 
 var refreshHp=function(me) {
@@ -332,13 +332,13 @@ var refreshHp=function(me) {
 		var psn=me.who;
 		var hp=comb.ppl[me.who].hp+'';
 		while (hp.length<3) {
-			hp=' '+hp;
+			hp=' '+hp
 		};
 		var hpChars=getChars(hp);
 		me.base.changeChild(4,'text',-hpChars[0][0],-hpChars[0][1]);
 		me.base.changeChild(5,'text',-hpChars[1][0],-hpChars[1][1]);
-		me.base.changeChild(6,'text',-hpChars[2][0],-hpChars[2][1]);
-	};
+		me.base.changeChild(6,'text',-hpChars[2][0],-hpChars[2][1])
+	}
 };
 
 
@@ -349,17 +349,15 @@ var hpStat=function(who,x,y) {
 			var psn=this.who;
 			var hp=comb.ppl[this.who].hp+'';
 			while (hp.length<3) {
-				hp=' '+hp;
+				hp=' '+hp
 			};
 			var hpChars=getChars(hp);
 			this.base.changeChild(4,'text',-hpChars[0][0],-hpChars[0][1]);
 			this.base.changeChild(5,'text',-hpChars[1][0],-hpChars[1][1]);
-			this.base.changeChild(6,'text',-hpChars[2][0],-hpChars[2][1]);
-		} else {
-			var hp='';
-		};
+			this.base.changeChild(6,'text',-hpChars[2][0],-hpChars[2][1])
+		}
 	});
-	hpEnt.who=who;
+	hpEnt.who=who
 };
 
 
@@ -372,20 +370,20 @@ var combatStat=function() {
 		if ((comb.isUp[0])||(comb.isUp[0]==0)) text+=' Is Up: '+comb.isUp[0];
 		this.base.detach().attach(
 			document.createTextNode(text)
-		);
-	};
+		)
+	}
 };
 
 // Area where hero stats go
 var combatBox=function() {
 	this.base=rw.ent('combatBox','menu','combatbox','png',320,128);
-	this.update=function() {};
+	this.update=function() {}
 };
 
 // Area for one hero's stats
 var heroBox=function(who) {
 	this.base=rw.ent(who+'_heroBox','menu','herobox','png',288,32);
-	this.update=function() {};
+	this.update=function() {}
 };
 
 var loadFight=function() {
@@ -403,7 +401,7 @@ var loadFight=function() {
 	.newEnt(new targetArrow()).base.display(' ',0,0,0).end()
 	.func(hpStat(0,236,220))
 	.func(hpStat(3,0,0))
-	.func(hpStat(4,80,0));
+	.func(hpStat(4,80,0))
 };
 
 
@@ -412,7 +410,7 @@ var wallCount=0;
 var wall=function(x,y) {
 	this.base=rw.ent('wall'+wallCount++,'','','',x,y);
 	this.update=function() {};
-	this.hitMap=[['wall',['hero'],0,0,x,y]];
+	this.hitMap=[['wall',['hero'],0,0,x,y]]
 };
 
 var hero=function() {
@@ -426,72 +424,70 @@ var hero=function() {
 		if (rw.key('ua')) {
 			this.base.move(0,-0.5);
 			moving=true;
-			this.dir='u';
+			this.dir='u'
 		} else if (rw.key('da')) {
 			this.base.move(0,0.5);
 			moving=true;
-			this.dir='d';
+			this.dir='d'
 		} else if (rw.key('la')) {
 			this.base.move(-0.5,0);
 			moving=true;
-			this.dir='l';
+			this.dir='l'
 		} else if (rw.key('ra')) {
 			this.base.move(0.5,0);
 			moving=true;
-			this.dir='r';
+			this.dir='r'
 		};
 		if(moving) {
 			if (this.moveCount<8) {
-				this.moveCount++;
+				this.moveCount++
 			} else {
 				this.moveCount=0;
 				if (this.moveDir==false) {
 					if (this.ani<2) {
-						this.ani++;
+						this.ani++
 					} else {
 						this.ani--;
-						this.moveDir=true;
+						this.moveDir=true
 					};
 				} else {
 					if (this.ani>0) {
-						this.ani--;
+						this.ani--
 					} else {
 						this.ani++;
-						this.moveDir=false;
-					};
-				};
-			};
-		} else {
-			//this.ani=1;
+						this.moveDir=false
+					}
+				}
+			}
 		};
-		this.base.changeSprite(this.dir+this.ani);
+		this.base.changeSprite(this.dir+this.ani)
 	};
 	this.hitMap=[['hero',['wall','villan'],0,2,16,18]];
 	this.gotHit=function(by) {
 		if (by=='wall') {
-			this.base.wipeMove();
+			this.base.wipeMove()
 		} else if (by=='villan') {
 			if (rw.key('s')) {
-				rw.atEnd(loadFight);
-			};
-		};
-	};
+				rw.atEnd(loadFight)
+			}
+		}
+	}
 };
 
 var villan=function() {
 	this.base=rw.ent('villan','npc/dknightF','d1','png',16,18);
 	this.update=function() {};
-	this.hitMap=[['villan',['hero'],0,2,16,18]];
+	this.hitMap=[['villan',['hero'],0,2,16,18]]
 };
 
 var loadMain=function() {
-	rw.wipeAll().loadState('main');
+	rw.wipeAll().loadState('main')
 };
 
 var gameOver=function() {
 	party.lead=new hStat();
-	rw.wipeAll().func(createMain());
-}
+	rw.wipeAll().func(createMain())
+};
 
 var createMain=function() {
 	rw.newMap('map','map01','png',320,320).display().end()
@@ -503,9 +499,9 @@ var createMain=function() {
 	.newEnt(new wall(32,32)).base.display('',208,16,0).end()
 	.newEnt(new wall(16,16)).base.display('',208,48,0).end()
 	.func(textLine('test',16,'Arrg! Hi whirld?',0,308,308,function(){
-		this.base.move(1,0);
+		this.base.move(1,0)
 	}
-	));
+	))
 };
 
 
@@ -522,7 +518,7 @@ var textLine=function(name,cols,text,x,y,z,update) {
 	var txtEnt=rw.newEnt(new function() {
 		this.base=rw.ent(name,'menu',' ','png',cols*8,12);
 		this.cols=cols;
-		this.update=update;
+		this.update=update
 	});
 	txtEnt.base.display(' ',x,y,z);
 	for (var p=0;p<text.length;p++) {
@@ -530,13 +526,13 @@ var textLine=function(name,cols,text,x,y,z,update) {
 			var row=alp[q];
 			for (var r=0;r<row.length;r++) {
 				if (row[r]===text[p]) {
-					var pos=[r*8,q*12];
-				};
-			};
+					var pos=[r*8,q*12]
+				}
+			}
 		};
-		txtEnt.base.addChild(p,'text',p*8,0,0,8,12,-pos[0],-pos[1]);
+		txtEnt.base.addChild(p,'text',p*8,0,0,8,12,-pos[0],-pos[1])
 	};
-	return txtEnt;
+	return txtEnt
 };
 
 var startGame=function() {
@@ -544,5 +540,5 @@ var startGame=function() {
 	.setFPS(40)
 	.using('hero/rangerF','png',['u0','u1','u2','d0','d1','d2','l0','l1','l2','r0','r1','r2'])
 	.func(createMain())
-	.start();
+	.start()
 };
