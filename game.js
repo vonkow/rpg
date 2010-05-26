@@ -1,3 +1,16 @@
+var items=[
+	['mouse',1],
+	['fiddle',1],
+	['pants',1],
+	['ball',1],
+	['wall',1],
+	['call',1],
+	['frog',1],
+	['toad',1],
+	['rock',1],
+	['cowbell',1]
+];
+
 var hStat=function() {
 	this.side=0;
 	this.hp=20;
@@ -11,9 +24,9 @@ var hStat=function() {
 	this.pos=0;
 	this.choice=false;
 	this.choices=[
-		['attack','defend'],
+		['attack','defend',' ',' ',' ',' ',' ',' ',' ',' ',' ',' '],
 		['heal'],
-		['item']
+		items
 	];
 	this.turn=function() {
 		var comb=rw.rules['combat'];
@@ -21,7 +34,9 @@ var hStat=function() {
 		comb.choices=this.choices;
 		if (comb.act) {
 			if (comb.choice===0) {
-				attack(this,comb.ppl[comb.targeting])
+				if (comb.subChoice===0) {
+					attack(this,comb.ppl[comb.targeting])
+				}
 			} else if (comb.choice===1) {
 				if (Math.random()>0.5) comb.ppl[comb.targeting].hp+=5
 			};
@@ -76,127 +91,186 @@ var combat=function() {
 	this.menu=false;
 	this.choice=false;
 	this.subChoice=false;
+	this.subTop=0;
 	this.choices=[];
 	this.targeting=false;
 	this.act=false;
 	this.delay=0;
 	this.change=true;
+	this.pickChoice=function() {
+		if (rw.key('da')) {
+			(this.choice<this.choices.length-1) ? this.choice++:this.choice=0;
+			this.delay=10;
+			this.change=true
+		} else if (rw.key('ua')) {
+			(this.choice>0) ? this.choice--:this.choice=this.choices.length-1;
+			this.delay=10;
+			this.change=true
+		} else if (rw.key('z')) {
+			this.subChoice=0;
+			this.delay=10;
+			this.change=true
+		}
+	};
+	this.pickSubChoice=function() {
+		if (rw.key('da')) {
+			if (this.subChoice<this.choices[this.choice].length-1) {
+				this.subChoice++;
+				if (this.subChoice>this.subTop+7) this.subTop++
+			} else {
+				this.subChoice=0;
+				this.subTop=0
+			};
+			this.delay=10;
+			this.change=true
+		} else if (rw.key('ua')) {
+			if (this.subChoice) {
+				this.subChoice--;
+				if (this.subChoice<this.subTop) this.subTop--
+			} else {
+				this.subChoice=this.choices[this.choice].length-1;
+				this.subTop=this.subChoice-7;
+				if (this.subTop<0) this.subTop=0
+			};
+			this.delay=10;
+			this.change=true
+		} else if (rw.key('z')) {
+			this.menu=false;
+			this.targeting=2;
+			this.nextTarget(true);
+			this.delay=10;
+			this.subTop=0;
+			this.change=true
+		} else if (rw.key('x')) {
+			this.subChoice=false;
+			this.delay=10;
+			this.subTop=0;
+			this.change=true
+		}
+	};
+	this.nextTarget=function(forward) {
+		var newTarget=false;
+		var currentTarget=this.targeting;
+		if (forward) {
+			while (!newTarget) {
+				currentTarget++;
+				if (currentTarget==this.ppl.length) currentTarget=0;
+				if (this.ppl[currentTarget].alive) {
+					this.targeting=currentTarget;
+					newTarget=true
+				};
+				if (currentTarget==this.targeting) newTarget=true
+			}
+		} else {
+			while (!newTarget) {
+				currentTarget--;
+				if (currentTarget==-1) currentTarget=this.ppl.length-1;
+				if (this.ppl[currentTarget].alive) {
+					this.targeting=currentTarget;
+					newTarget=true
+				};
+				if (currentTarget==this.targeting) newTarget=true
+			}
+		}
+	};
+	this.pickTarget=function() {
+		if (rw.key('da')) {
+			this.nextTarget(true);
+			this.delay=10;
+			this.change=true
+		} else if (rw.key('ua')) {
+			this.nextTarget(false);
+			this.delay=10;
+			this.change=true
+		} else if (rw.key('z')) {
+			this.act=true;
+			this.change=true
+		} else if (rw.key('x')) {
+			this.targeting=false;
+			this.menu=true;
+			this.delay=10;
+			this.change=true
+		}
+	};
+	this.loopInit=function() {
+		for (var x=0;x<this.ppl.length;x++) {
+			var psn = this.ppl[x];
+			if (psn.alive) {
+				if (psn.tInit>0) psn.tInit--;
+				if (psn.tInit==0) {
+					psn.tInit=psn.init;
+					this.isUp.push(x);
+					this.change=true;
+					this.pause=true
+				}
+			}
+		}
+	};
+	this.processIsUp=function() {
+		if (this.isUp.length>0) {
+			var psn = this.ppl[this.isUp[0]];
+			if (psn.alive) {
+				psn.turn();
+				if (psn.turnEnd) {
+					this.isUp.shift();
+					psn.turnEnd=false;
+					this.choice=false;
+					this.subChoice=false;
+					this.act=false;
+					this.targeting=false;
+					this.leadUp=false;
+					this.secondUp=false;
+					this.thirdUp=false;
+					this.change=true
+				}
+			} else {
+				this.isUp.shift()
+			}
+		} else {
+			this.pause=false
+		}
+	};
+	this.checkVictory=function() {
+		var side0=false,side1=false;
+		for(var x=0;x<this.ppl.length;x++) {
+			var psn=this.ppl[x];
+			if (psn.alive) {
+				if(psn.side==0) {
+					side0=true
+				} else {
+					side1=true
+				}
+			}
+		};
+		if (side0==false) rw.atEnd(gameOver);
+		if (side1==false) rw.atEnd(loadMain) // Change this to load get loot screen
+	};
 	this.rule=function() {
 		this.change=false;
 		if (this.pause==false) {
-			for (var x=0;x<this.ppl.length;x++) {
-				var psn = this.ppl[x];
-				if (psn.alive) {
-					if (psn.tInit>0) {
-						psn.tInit--
-					};
-					if (psn.tInit==0) {
-						psn.tInit=psn.init;
-						this.isUp.push(x);
-						this.pause=true
-					}
-				}
-			}
+			this.loopInit()
 		} else {
-			if (this.isUp.length>0) {
-				var psn = this.ppl[this.isUp[0]];
-				if (psn.alive) {
-					psn.turn();
-					if (psn.turnEnd) {
-						this.isUp.shift();
-						psn.turnEnd=false;
-						this.choice=false;
-						this.subChoice=false;
-						this.act=false;
-						this.targeting=false;
-						this.leadUp=false;
-						this.secondUp=false;
-						this.thirdUp=false;
-						this.change=true
-					}
-				} else {
-					this.isUp.shift()
-				}
-			} else {
-				this.pause=false
-			};
-			var side0=false,side1=false;
-			for(var x=0;x<this.ppl.length;x++) {
-				var psn=this.ppl[x];
-				if (psn.alive) {
-					if(psn.side==0) {
-						side0=true
-					} else {
-						side1=true
-					}
-				}
-			};
-			if (side0==false) rw.atEnd(gameOver);
-			if (side1==false) rw.atEnd(loadMain) // Change this to load get loot screen
+			this.processIsUp();
+			this.checkVictory()
 		};
 		// Key related stuff
 		if (this.delay<1) {
 			if ((this.leadUp)||(this.secondUp)||(this.thirdUp)) {
 				if ((this.targeting===false)&&(this.menu===false)) {
+					this.change=true;
 					if (rw.key('z')) {
 						this.menu=true;
 						this.choice=0;
-						this.delay=10;
-						this.change=true
+						this.delay=10
 					}
 				} else if (this.menu!==false) {
 					if (this.subChoice===false) {
-						if (rw.key('da')) {
-							(this.choice<this.choices.length-1) ? this.choice++:this.choice=0;
-							this.delay=10;
-							this.change=true
-						} else if (rw.key('ua')) {
-							(this.choice>0) ? this.choice--:this.choice=this.choices.length-1;
-							this.delay=10;
-							this.change=true
-						} else if (rw.key('z')) {
-							this.subChoice=0;
-							this.delay=10;
-							this.change=true
-						}
+						this.pickChoice()
 					} else {
-						if (rw.key('da')) {
-							(this.subChoice<this.choices.length-1) ? this.subChoice++:this.subChoice=0;
-							this.delay=10;
-							this.change=true
-						} else if (rw.key('ua')) {
-							(this.subChoice>0) ? this.subChoice--:this.subChoice=this.choices.length-1;
-							this.delay=10;
-							this.change=true
-						} else if (rw.key('z')) {
-							this.menu=false;
-							this.targeting=3;
-							this.delay=10;
-							this.change=true
-						} else if (rw.key('x')) {
-							this.subChoice=false;
-							this.delay=10;
-							this.change=true
-						}
+						this.pickSubChoice()
 					}
 				} else if (this.targeting!==false) {
-					if (rw.key('da')) {
-						(this.targeting<8) ? this.targeting++:this.targeting=0;
-						this.delay=10;
-						this.change=true
-					} else if (rw.key('ua')) {
-						(this.targeting>0) ? this.targeting--:this.targeting=8;
-						this.delay=10;
-						this.change=true
-					} else if (rw.key('z')) {
-						this.act=true;
-						this.change=true
-					} else if (rw.key('x')) {
-						this.targeting=false;
-						this.menu=true;
-						this.delay=10;
-						this.change=true
-					}
+					this.pickTarget()
 				}
 			}
 		} else {
@@ -217,9 +291,12 @@ var combatVillan=function(num,heroClass,gender) {
 	this.num=num;
 	this.alive=true;
 	this.update=function() {
-		if ((rw.rules['combat'].ppl[this.num].alive==false)&&(this.alive)) {
-			this.alive=false;
-			this.base.shiftSprite(-32,0)
+		var comb=rw.rules['combat'];
+		if (comb.change) {
+			if ((comb.ppl[this.num].alive==false)&&(this.alive)) {
+				this.alive=false;
+				this.base.shiftSprite(-32,0)
+			}
 		}
 	}
 };
@@ -229,17 +306,19 @@ var selectArrow=function() {
 	this.base=rw.ent('selectArrow','menu',' ','png',16,16);
 	this.update=function() {
 		var comb=rw.rules['combat'];
-		if (comb.leadUp) {
-			this.base.moveTo(0,56,56);
-			this.base.changeSprite('arrowR')
-		} else if (comb.secondUp) {
-			this.base.moveTo(0,104,104);
-			this.base.changeSprite('arrowR')
-		} else if (comb.thirdUp) {
-			this.base.moveTo(0,152,152);
-			this.base.changeSprite('arrowR')
-		} else {
-			this.base.changeSprite(' ')
+		if (comb.change) {
+			if (comb.leadUp) {
+				this.base.moveTo(0,56,56);
+				this.base.changeSprite('arrowR')
+			} else if (comb.secondUp) {
+				this.base.moveTo(0,104,104);
+				this.base.changeSprite('arrowR')
+			} else if (comb.thirdUp) {
+				this.base.moveTo(0,152,152);
+				this.base.changeSprite('arrowR')
+			} else {
+				this.base.changeSprite(' ')
+			}
 		}
 	}
 };
@@ -249,10 +328,12 @@ var selectMenu=function() {
 	this.base=rw.ent('selectmenu','menu',' ','png',112,80);
 	this.update=function() {
 		var comb=rw.rules['combat'];
-		if (comb.menu===false) {
-			this.base.changeSprite(' ')
-		} else {
-			this.base.changeSprite('selectmenu')
+		if (comb.change) {
+			if (comb.menu===false) {
+				this.base.changeSprite(' ')
+			} else {
+				this.base.changeSprite('selectmenu')
+			}
 		}
 	}
 };
@@ -262,11 +343,13 @@ var choiceArrow=function() {
 	this.base=rw.ent('choicearrow','menu',' ','png',16,16);
 	this.update=function() {
 		var comb=rw.rules['combat'];
-		if (comb.menu!==false) {
-			this.base.changeSprite('arrowR')
-			.moveTo(108,72+(16*comb.choice))
-		} else {
-			this.base.changeSprite(' ')
+		if (comb.change) {
+			if (comb.menu!==false) {
+				this.base.changeSprite('arrowR')
+				.moveTo(108,72+(16*comb.choice))
+			} else {
+				this.base.changeSprite(' ')
+			}
 		}
 	}
 };
@@ -275,10 +358,12 @@ var subMenu=function() {
 	this.base=rw.ent('submenu','menu',' ','png',128,128);
 	this.update=function() {
 		var comb=rw.rules['combat'];
-		if ((comb.subChoice!==false)&&(comb.targeting===false)) {
-			this.base.changeSprite('subselectmenu')
-		} else {
-			this.base.changeSprite(' ')
+		if (comb.change) {
+			if ((comb.subChoice!==false)&&(comb.targeting===false)) {
+				this.base.changeSprite('subselectmenu')
+			} else {
+				this.base.changeSprite(' ')
+			}
 		}
 	}
 };
@@ -287,11 +372,18 @@ var subArrow=function() {
 	this.base=rw.ent('subarrow','menu',' ','png',16,16);
 	this.update=function() {
 		var comb=rw.rules['combat'];
-		if ((comb.subChoice!==false)&&(comb.targeting===false)) {
-			this.base.changeSprite('arrowR')
-			.moveTo(0,0,0)
-		} else {
-			this.base.changeSprite(' ')
+		if (comb.change) {
+			if ((comb.subChoice!==false)&&(comb.targeting===false)) {
+				if (comb.choice!=1) {
+					var realChoicePos = (comb.subChoice-comb.subTop)*12;
+					this.base.changeSprite('arrowR')
+					.moveTo(104,48+realChoicePos,161)
+				} else {
+					this.base.changeSprite(' ')
+				}
+			} else {
+				this.base.changeSprite(' ')
+			}
 		}
 	}
 };
@@ -302,46 +394,43 @@ var targetArrow=function() {
 	this.posArray=[['L',48,56],['L',48,104],['L',48,152],['R',208,56],['R',208,104],['R',208,152],['R',256,40],['R',256,88],['R',256,136]];
 	this.update=function() {
 		var comb=rw.rules['combat'];
-		if (comb.targeting!==false) {
-			var pos=this.posArray[comb.targeting];
-			this.base.changeSprite('arrow'+pos[0]).moveTo(pos[1],pos[2],pos[2])
-		} else {
-			this.base.changeSprite(' ')
-		}
-	}
-};
-
-var getChars=function(text) {
-	var hpChars=[];
-	for (var p=0;p<text.length;p++) {
-		for (var q=0;q<alp.length;q++) {
-			var row=alp[q];
-			for (var r=0;r<row.length;r++) {
-				if (row[r]===text[p]) {
-					hpChars[p]=[r*8,q*12]
-				}
+		if (comb.change) {
+			if (comb.targeting!==false) {
+				var pos=this.posArray[comb.targeting];
+				this.base.changeSprite('arrow'+pos[0]).moveTo(pos[1],pos[2],pos[2])
+			} else {
+				this.base.changeSprite(' ')
 			}
 		}
-	};
-	return hpChars
-};
-
-var refreshHp=function(me) {
-	var comb=rw.rules['combat'];
-	if (comb.change) {
-		var psn=me.who;
-		var hp=comb.ppl[me.who].hp+'';
-		while (hp.length<3) {
-			hp=' '+hp
-		};
-		var hpChars=getChars(hp);
-		me.base.changeChild(4,'text',-hpChars[0][0],-hpChars[0][1]);
-		me.base.changeChild(5,'text',-hpChars[1][0],-hpChars[1][1]);
-		me.base.changeChild(6,'text',-hpChars[2][0],-hpChars[2][1])
 	}
 };
 
+var itemText=function(what) {
+	var item=items[what];
+	var itemEnt=textLine('itemtext_'+item[0],item[0].length+3,'00-'+item[0],0,320,320,function(){
+		var comb=rw.rules['combat'];
+		if (comb.change) {
+			if ((comb.subChoice!==false)&&(comb.targeting===false)&&(comb.choice==2)) {
+				var qty=items[this.what][1];
+				if (qty<10) qty=' '+qty;
+				var qtyChars=getChars(qty);
+				this.base.changeChild(0,'text',-qtyChars[0][0],-qtyChars[0][1]);
+				this.base.changeChild(1,'text',-qtyChars[1][0],-qtyChars[1][1]);
+				if ((this.what>=comb.subTop)&&(this.what<comb.subTop+8)) {
+					this.base.moveTo(120,50+((this.what-comb.subTop)*12),161)
+				} else {
+					this.base.moveTo(0,320,320)
+				}
+			} else {
+				this.base.moveTo(0,320,320)
+			}
+		}
+	}, function(){
+	});
+	itemEnt.what=what
+};
 
+// Shows a person's remaining hp
 var hpStat=function(who,x,y) {
 	var hpEnt=textLine('hpstat_'+who,7,'HP:    ',x,y,y,function(){
 		var comb=rw.rules['combat'];
@@ -360,19 +449,6 @@ var hpStat=function(who,x,y) {
 	hpEnt.who=who
 };
 
-
-// Temp Ent for showing Combat Stats
-var combatStat=function() {
-	this.base=rw.ent('combat','',' ','',320,320);
-	this.update=function() {
-		var comb=rw.rules['combat'];
-		var text='Villan1 HP: '+comb.ppl[3].hp+' Villan2 HP: '+comb.ppl[4].hp;
-		if ((comb.isUp[0])||(comb.isUp[0]==0)) text+=' Is Up: '+comb.isUp[0];
-		this.base.detach().attach(
-			document.createTextNode(text)
-		)
-	}
-};
 
 // Area where hero stats go
 var combatBox=function() {
@@ -398,10 +474,21 @@ var loadFight=function() {
 	.newEnt(new selectMenu()).base.display(' ',96,56,56).end()
 	.newEnt(new choiceArrow()).base.display(' ',108,72,72).end()
 	.newEnt(new subMenu()).base.display(' ',88,32,160).end()
+	.newEnt(new subArrow()).base.display(' ',0,0,0).end()
 	.newEnt(new targetArrow()).base.display(' ',0,0,0).end()
 	.func(hpStat(0,236,220))
 	.func(hpStat(3,0,0))
 	.func(hpStat(4,80,0))
+	.func(itemText(0))
+	.func(itemText(1))
+	.func(itemText(2))
+	.func(itemText(3))
+	.func(itemText(4))
+	.func(itemText(5))
+	.func(itemText(6))
+	.func(itemText(7))
+	.func(itemText(8))
+	.func(itemText(9))
 };
 
 
@@ -514,11 +601,27 @@ var alp=[
 	['p','q','r','s','t','u','v','w','x','y','z','{','|','}','~','']
 ];
 
-var textLine=function(name,cols,text,x,y,z,update) {
+var getChars=function(text) {
+	var hpChars=[];
+	for (var p=0;p<text.length;p++) {
+		for (var q=0;q<alp.length;q++) {
+			var row=alp[q];
+			for (var r=0;r<row.length;r++) {
+				if (row[r]===text[p]) {
+					hpChars[p]=[r*8,q*12]
+				}
+			}
+		}
+	};
+	return hpChars
+};
+
+var textLine=function(name,cols,text,x,y,z,update,inactive) {
 	var txtEnt=rw.newEnt(new function() {
 		this.base=rw.ent(name,'menu',' ','png',cols*8,12);
 		this.cols=cols;
-		this.update=update
+		this.update=update||function(){};
+		this,inactive=inactive||function(){}
 	});
 	txtEnt.base.display(' ',x,y,z);
 	for (var p=0;p<text.length;p++) {
